@@ -103,7 +103,7 @@ body.play #ls{display:block}
   <p>Setelah semua musuh kalah, sebuah <b>gerbang</b> terbuka di tengah atas arena (ada panah penunjuk). Masuklah untuk lanjut ke gelombang berikutnya. Hati yang jatuh memulihkan nyawa.</p>
   <div class="kv"><b>Pemain 1</b><span>WASD gerak, F atau Spasi skill</span><b>Pemain 2</b><span>Panah gerak, Enter atau / skill</span><b>Jeda</b><span>P atau Esc</span><b>Sentuh</b><span>Joystick kiri, tombol Skill kanan</span></div>
   <p>Pemanah dan Penyihir bisa memilih <b>ras</b> di Ruang Karakter: Manusia atau Elf. Ras mengubah penampilan sekaligus nyawa, kecepatan gerak, dan kekuatan serangan.</p>
-  <p>Pemanah dan Penyihir juga bisa memilih <b>elemen</b> (termasuk Cahaya & Gelap) yang mengubah skill area dan efek serangan.</p>
+  <p><b>Pemanah</b> secara eksklusif hanya dapat memilih elemen <b>Cahaya</b> atau <b>Gelap</b>, yang memberikan skill area yang sangat kuat dan unik.</p>
   <p>Setiap karakter bisa diganti <b>gender</b>-nya (Laki-laki atau Perempuan) di Ruang Karakter. Ini hanya mengubah penampilan, tidak memengaruhi statistik.</p>
   <p>Mode berdua adalah co-op lokal. Pemain yang jatuh hidup lagi di gelombang berikutnya. Jatuh bersamaan berarti permainan selesai.</p>
  </div>
@@ -121,7 +121,7 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),cl=(v,a,b)=>Math.max(a,Math.min(b,
 const CL={
  knight:{n:'Ksatria',hp:130,sp:150,dmg:16,rng:62,cd:.5,scd:8,d:'Petarung jarak dekat yang seimbang. Skill: Tebasan Pahlawan, putaran pedang yang menghempaskan musuh lalu melepas 3 gelombang pedang yang menembus.'},
  tank:{n:'Tank',hp:210,sp:125,dmg:12,rng:78,cd:.8,scd:12,d:'Sangat tangguh, menghantam semua musuh di sekitar. Skill: Benteng Baja, menarik musuh dan mengurangi kerusakan.'},
- archer:{n:'Pemanah',hp:85,sp:160,dmg:12,rng:330,cd:.45,scd:9,d:'Menyerang dari jauh dengan cepat. Bisa memilih elemen (Cahaya/Gelap) untuk skill area yang unik dan efek serangan khusus.'},
+ archer:{n:'Pemanah',hp:85,sp:160,dmg:12,rng:330,cd:.45,scd:9,d:'Menyerang dari jauh dengan cepat. Hanya bisa menggunakan elemen Cahaya atau Gelap untuk skill area yang sangat mematikan dan mendukung.'},
  mage:{n:'Penyihir',hp:75,sp:145,dmg:14,rng:300,cd:.6,scd:11,d:'Menguasai 7 elemen, setiap elemen punya skill berbeda.'},
  healer:{n:'Penyembuh',hp:95,sp:145,dmg:9,rng:280,cd:.7,scd:14,d:'Menyembuhkan diri dan rekan secara berkala. Skill: Cahaya Suci, memulihkan semua pemain.'},
  assassin:{n:'Pembunuh',hp:80,sp:185,dmg:15,rng:52,cd:.32,scd:6,d:'Cepat dan mematikan, peluang serangan kritis. Skill: Terjang menembus musuh.'}};
@@ -135,8 +135,8 @@ const EL=[
  {n:'Tanah',c:'#9a6b3a',v:300,m:1.3,pi:0,r:10,d:'Membuat musuh pingsan sesaat. Skill Golem Penjaga memanggil sekutu batu.'},
  {n:'Angin',c:'#bfeeff',v:430,m:.9,pi:2,r:7,d:'Menembus beberapa musuh. Skill Tornado menyedot musuh.'},
  {n:'Petir',c:'#fff27a',v:460,m:1,pi:0,r:6,d:'Menyambar musuh di dekatnya. Skill Badai Petir menyambar bertubi-tubi.'},
- {n:'Cahaya',c:'#fff3a0',v:400,m:.95,pi:1,r:8,d:'Cahaya yang menembus. Skill Hujan Panah Fajar memulihkan tim dan membakar musuh.'},
- {n:'Gelap',c:'#9a4fe0',v:340,m:1.05,pi:0,r:8,d:'Menyedot nyawa musuh. Skill Hujan Panah Kekelaman memberikan lifesteal dan area damage.'}];
+ {n:'Cahaya',c:'#fff3a0',v:400,m:.95,pi:1,r:8,d:'Pemanah Cahaya: Skill Cakram Fajar menembus musuh, memberikan penyembuhan besar dan kekebalan sementara kepada seluruh tim.'},
+ {n:'Gelap',c:'#9a4fe0',v:340,m:1.05,pi:0,r:8,d:'Pemanah Gelap: Skill Badai Kekelaman menciptakan lubang hitam yang menyedot musuh, memberikan damage area dan lifesteal yang kuat.'}];
 const SK1=['#3a6bc4','#b3202f','#3f8a4a','#7a4aa8','#c9742a','#2b2b34','#d9a441','#e8e4d4'];
 const SK2=['#d9a441','#c0c7d1','#6b2236','#2a8a8a','#8a5a2a','#f3ead2'];
 const HATS=['Helm','Mahkota','Tudung','Rambut'];
@@ -549,19 +549,30 @@ function skill(p){if(G&&G.cli){if(!G.over)NET.sk();return}if(!G||G.pause||G.over
   p.gd=5;p.tn=5;p.inv=Math.max(p.inv,.5);p.hp=Math.min(p.max,p.hp+p.max*.15);
   for(const e of G.en)if(!e.dead&&dist(e,p)<260+e.r){const a=Math.atan2(p.y-e.y,p.x-e.x);hit(e,d*1.2,p,Math.cos(a)*330,Math.sin(a)*330);e.stun=Math.max(e.stun||0,.4)}}
  else if(p.cls=='archer'){
-  if(p.el === 5) {
-   G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1,m:1,s:'HUJAN PANAH FAJAR!'});nfx('tx',p.x,p.y-80,0,'HUJAN PANAH FAJAR!');
-   ring(p, 200, '#fff3a0');
-   for(let i=0; i<12; i++){const a = i/12*TAU;G.pb.push({x:p.x,y:p.y-18,vx:Math.cos(a)*450,vy:Math.sin(a)*450,d:d*1.2,l:1.2,pi:2,r:6,k:'ar',h:[],o:p,c:'#fff3a0',el:5});}
-   for(const q of G.p) if(q.alive && dist(p,q) < 250) {
-    const heal = Math.round(q.max * 0.15);q.hp = Math.min(q.max, q.hp + heal);
-    G.fx.push({k:'rg',x:q.x,y:q.y,r:30,l:.4,m:.4,c:'#fff3a0'});G.fx.push({k:'tx',x:q.x,y:q.y-60,l:.7,m:.7,s:'+'+heal});
+  if(p.el === 5) { // Cahaya
+   G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1.5,m:1.5,s:'CAKRAM FAJAR PENEMBUS!'});nfx('tx',p.x,p.y-80,0,'CAKRAM FAJAR PENEMBUS!');
+   G.sh = Math.max(G.sh, 0.2);
+   G.fx.push({k:'rg',x:p.x,y:p.y,r:300,l:0.6,m:0.6,c:'#fff'});
+   for(let i=0; i<24; i++){
+    const a = i/24*TAU + (R()-.5)*0.1;
+    G.pb.push({x:p.x,y:p.y-18,vx:Math.cos(a)*550,vy:Math.sin(a)*550,d:d*1.4,l:1.5,pi:3,r:7,k:'ar',h:[],o:p,c:'#fff3a0',el:5});
    }
-  } else if(p.el === 6) {
-   G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1,m:1,s:'HUJAN PANAH KEKELAMAN!'});nfx('tx',p.x,p.y-80,0,'HUJAN PANAH KEKELAMAN!');
-   ring(p, 180, '#9a4fe0');
-   for(let i=0; i<12; i++){const a = i/12*TAU;G.pb.push({x:p.x,y:p.y-18,vx:Math.cos(a)*450,vy:Math.sin(a)*450,d:d*1.3,l:1.2,pi:2,r:6,k:'ar',h:[],o:p,c:'#9a4fe0',el:6});}
-   G.zn.push({k:'bh',x:p.x,y:p.y,t:0,l:2.0,o:p,d:d*0.3,tk:0,sd:0});
+   for(const q of G.p) if(q.alive && dist(p,q) < 300) {
+    const heal = Math.round(q.max * 0.25);
+    q.hp = Math.min(q.max, q.hp + heal);
+    q.inv = Math.max(q.inv, 1.5);
+    G.fx.push({k:'rg',x:q.x,y:q.y,r:45,l:0.8,m:0.8,c:'#fff3a0'});
+    G.fx.push({k:'tx',x:q.x,y:q.y-70,l:1.2,m:1.2,s:'+'+heal});
+   }
+  } else if(p.el === 6) { // Gelap
+   G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1.5,m:1.5,s:'BADAI PANAH KEKELAMAN!'});nfx('tx',p.x,p.y-80,0,'BADAI PANAH KEKELAMAN!');
+   G.sh = Math.max(G.sh, 0.3);
+   G.fx.push({k:'rg',x:p.x,y:p.y,r:250,l:0.8,m:0.8,c:'#4a1f7a'});
+   for(let i=0; i<24; i++){
+    const a = i/24*TAU + (R()-.5)*0.1;
+    G.pb.push({x:p.x,y:p.y-18,vx:Math.cos(a)*550,vy:Math.sin(a)*550,d:d*1.5,l:1.5,pi:3,r:7,k:'ar',h:[],o:p,c:'#9a4fe0',el:6});
+   }
+   G.zn.push({k:'bh',x:p.x,y:p.y,t:0,l:4.5,o:p,d:d*0.5,tk:0,sd:0});
   } else {
    for(let i=0;i<16;i++){const a=i/16*TAU;G.pb.push({x:p.x,y:p.y-18,vx:Math.cos(a)*400,vy:Math.sin(a)*400,d:d*1.1,l:.9,pi:1,r:5,k:'ar',h:[],o:p})}
   }
@@ -733,7 +744,7 @@ function toMenu(){cancelAnimationFrame(raf);G=null;document.body.classList.remov
 function toLobby(){cancelAnimationFrame(raf);G=null;document.body.classList.remove('play');show('net')}
 function pause(f){if(!G||G.over||G.net)return;G.pause=f===undefined?!G.pause:f;show(G.pause?'pause':null)}
 function rch(){const c=cfg[who];
- $('#chb').innerHTML='<div class="tabs">'+[0,1].map(i=>`<button class="tab ${who==i?'on':''}" data-k="who" data-v="${i}">Pemain ${i+1}</button>`).join('')+'</div><div class="row"><canvas id="pv" width="120" height="130"></canvas><div class="col"><label>Nama <input id="nm" maxlength="10"></label><div class="cls">'+Object.keys(CL).map(k=>`<button class="cc ${c.cls==k?'on':''}" data-k="cls" data-v="${k}">${CL[k].n}</button>`).join('')+`</div><p class="ds">${(c.cls=='mage'||c.cls=='archer')?EL[c.el||0].d:CL[c.cls].d}</p>${(c.cls=='mage'||c.cls=='archer')?'<div class="sw">'+EL.map((e,i)=>'<button class="tab '+((c.el||0)==i?'on':'')+'" data-k="el" data-v="'+i+'" style="border-color:'+e.c+'">'+e.n+'</button>').join('')+'</div>':''}${c.cls=='archer'||c.cls=='mage'?'<div class="sw"><span style="color:var(--mut);font-size:14px">Ras:</span>'+RC.map((r,i)=>'<button class="tab '+((c.ra|0)==i?'on':'')+'" data-k="ra" data-v="'+i+'">'+r.n+'</button>').join('')+'</div><p class="ds" style="min-height:0">'+RC[c.ra|0].d+'</p>':''}${'<div class="sw"><span style="color:var(--mut);font-size:14px">Gender:</span>'+['Laki-laki','Perempuan'].map((n,i)=>'<button class="tab '+((c.gn|0)==i?'on':'')+'" data-k="gn" data-v="'+i+'">'+n+'</button>').join('')+'</div>'}<div class="sw">`+SK1.map(x=>`<button class="s ${c.c1==x?'on':''}" style="background:${x}" data-k="c1" data-v="${x}" aria-label="Warna badan"></button>`).join('')+'</div><div class="sw">'+SK2.map(x=>`<button class="s ${c.c2==x?'on':''}" style="background:${x}" data-k="c2" data-v="${x}" aria-label="Warna aksen"></button>`).join('')+'</div><div class="sw">'+HATS.map((h,i)=>`<button class="tab ${c.hat==i?'on':''}" data-k="hat" data-v="${i}">${c.cls=='mage'&&i==0?'Topi Penyihir':h}</button>`).join('')+'</div></div></div>';
+ $('#chb').innerHTML='<div class="tabs">'+[0,1].map(i=>`<button class="tab ${who==i?'on':''}" data-k="who" data-v="${i}">Pemain ${i+1}</button>`).join('')+'</div><div class="row"><canvas id="pv" width="120" height="130"></canvas><div class="col"><label>Nama <input id="nm" maxlength="10"></label><div class="cls">'+Object.keys(CL).map(k=>`<button class="cc ${c.cls==k?'on':''}" data-k="cls" data-v="${k}">${CL[k].n}</button>`).join('')+`</div><p class="ds">${(c.cls=='mage')?EL[c.el||0].d:CL[c.cls].d}</p>${(c.cls=='mage')?'<div class="sw">'+EL.map((e,i)=>'<button class="tab '+((c.el||0)==i?'on':'')+'" data-k="el" data-v="'+i+'" style="border-color:'+e.c+'">'+e.n+'</button>').join('')+'</div>':''}${(c.cls=='archer')?'<div class="sw"><span style="color:var(--mut);font-size:14px">Elemen:</span>'+[EL[5], EL[6]].map((e,i)=>{const idx=i+5; return '<button class="tab '+((c.el||0)==idx?'on':'')+'" data-k="el" data-v="'+idx+'" style="border-color:'+e.c+'">'+e.n+'</button>'}).join('')+'</div><p class="ds" style="min-height:0">'+EL[c.el||0].d+'</p>':''}${c.cls=='archer'||c.cls=='mage'?'<div class="sw"><span style="color:var(--mut);font-size:14px">Ras:</span>'+RC.map((r,i)=>'<button class="tab '+((c.ra|0)==i?'on':'')+'" data-k="ra" data-v="'+i+'">'+r.n+'</button>').join('')+'</div><p class="ds" style="min-height:0">'+RC[c.ra|0].d+'</p>':''}${'<div class="sw"><span style="color:var(--mut);font-size:14px">Gender:</span>'+['Laki-laki','Perempuan'].map((n,i)=>'<button class="tab '+((c.gn|0)==i?'on':'')+'" data-k="gn" data-v="'+i+'">'+n+'</button>').join('')+'</div>'}<div class="sw">`+SK1.map(x=>`<button class="s ${c.c1==x?'on':''}" style="background:${x}" data-k="c1" data-v="${x}" aria-label="Warna badan"></button>`).join('')+'</div><div class="sw">'+SK2.map(x=>`<button class="s ${c.c2==x?'on':''}" style="background:${x}" data-k="c2" data-v="${x}" aria-label="Warna aksen"></button>`).join('')+'</div><div class="sw">'+HATS.map((h,i)=>`<button class="tab ${c.hat==i?'on':''}" data-k="hat" data-v="${i}">${c.cls=='mage'&&i==0?'Topi Penyihir':h}</button>`).join('')+'</div></div></div>';
  $('#nm').value=c.name;$('#nm').oninput=e=>{c.name=e.target.value.slice(0,10)||('Pemain '+(who+1));save()}}
 $('#chb').onclick=e=>{const d=e.target.closest('[data-k]');if(!d)return;const k=d.dataset.k,v=d.dataset.v;if(k=='who')who=+v;else if(k=='hat'||k=='el'||k=='ra'||k=='gn')cfg[who][k]=+v;else cfg[who][k]=v;save();rch()};
 setInterval(()=>{if(G&&document.body.classList.contains('play'))return;mt+=.06;
