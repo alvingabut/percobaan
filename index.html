@@ -1134,7 +1134,111 @@ function cu(dt){const S=G,n=sn;S.t+=dt;S.time+=dt;S.ban=Math.max(0,S.ban-dt);S.s
 const sf=f=>async(...a)=>{try{return await f(...a)}catch(e){st('Gagal: '+(e.code||e.message))}};
 window.NET={get host(){return host},get uid(){return uid},get code(){return code},rl,pub,cu,lobby,leave(){bye();toMenu()},create:sf(create),join:sf(join),begin:sf(begin),sk(){sc++;it=0}};
 </script>
-</body><script>
+</body>
+ <script>
+/* PENYEMBUH SUCI */
+CL.healer.n='Penyembuh Suci';CL.healer.sn='Suci';
+CL.healer.d='Pendeta bersayap yang menyembuhkan rekan secara berkala. Skill: Cahaya Suci, memulihkan semua pemain dan membakar musuh di sekitar dengan sinar suci.';
+(()=>{const p=[...document.querySelectorAll('#help .help p')].find(e=>e.textContent.indexOf('Tank Kerajaan')==0);if(p)p.insertAdjacentHTML('afterend','<p><b>Penyembuh Suci</b> adalah pendeta bersayap dengan halo emas. Ia menyembuhkan rekan terdekat secara berkala, dan skill Cahaya Suci memulihkan semua pemain sambil membakar musuh di sekitarnya.</p>')})();
+
+const _skHl=skill;
+skill=function(p){
+ const ok=p&&p.cls=='healer'&&p.alive&&!(p.sk>0)&&G&&!G.cli&&!G.pause&&!G.over;
+ _skHl(p);
+ if(!ok||!(p.sk>0))return;
+ G.sh=Math.max(G.sh,.1);ring(p,200,'#fff3a0');ring(p,120,'#ffffff');
+ G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1.2,m:1.2,s:'CAHAYA SUCI!'});nfx('tx',p.x,p.y-80,0,'CAHAYA SUCI!');
+ for(const q of G.p)if(q.alive)G.fx.push({k:'rg',x:q.x,y:q.y,r:40,l:.5,m:.5,c:'#fff3a0'});
+ for(let i=0;i<22;i++){const a=i/22*TAU;G.fx.push({k:'pt',x:p.x+Math.cos(a)*40,y:p.y-14+Math.sin(a)*16,vx:Math.cos(a)*200,vy:Math.sin(a)*130-60,l:.6,m:.6,c:i%2?'#fff':'#fff3a0'})}
+};
+
+const _hHl=hero;
+hero=function(c,x,y,u,o,t){
+ if(o.cls!='healer')return _hHl(c,x,y,u,o,t);
+ const d=o.dir<0?-1:1,m=o.mv?1:0,ph=t*13,sw=m?Math.sin(ph):0,at=o.at||0,sq=o.sq||0,hu=o.hu||0,ca=o.cast||0,
+  hat=o.hat|0,gn=o.gn==1,c1=o.c1,c2=o.c2,
+  bob=m?-Math.abs(Math.cos(ph)):Math.sin(t*2.6)*.3,by=m?0:Math.sin(t*2.6)*.2,blink=(t%3.4)<.12,
+  DK='#14101c',WH='#f6f1e6',WH2='#d9d0ba',WH3='#ffffff',GD='#d9a441',GL='#fff1b0',
+  SK=RSK[0][0],SD=RSK[0][1],HR='#f2d68a',GEM='#7fe8ff',pl=.5+.5*Math.sin(t*4),
+  hx=7.6+at*1.6,hy=-12.6-ca*4;
+ let ol=0;
+ const r=(p,q,w,h,col)=>{c.fillStyle=ol?DK:col;c.fillRect(Math.round(p*u),Math.round(q*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)))};
+ const L=(x1,y1,x2,y2,w,col)=>{const n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)*2.5));for(let i=0;i<=n;i++){const f=i/n;r(x1+(x2-x1)*f-w/2,y1+(y2-y1)*f-w/2,w,w,col)}};
+ const wv=j=>(m?Math.sin(ph-j*.5)*.7:Math.sin(t*3+j*.5)*.35)*(j/10);
+ const wing=(k,ca1,ca2,len)=>{const fl=Math.sin(t*(m?9:2.6)+k*1.2)*.14;
+  for(let i=0;i<7;i++){const a=-3.3+i*.27+fl,ln=len+Math.sin(i/6*Math.PI)*4,ex=-2+Math.cos(a)*ln,ey=-19+by+Math.sin(a)*ln;
+   L(-2,-19+by,ex,ey,2.4-k*.4,i%2?ca1:ca2);r(ex-.8,ey-.8,1.6,1.6,GL)}};
+ const body=()=>{
+  wing(1,'#cfc6ae',WH2,10.5);wing(0,WH3,WH,9);
+  /* jubah */
+  for(let j=0;j<9;j++){const w=7.2+j*.5,x0=-w/2+wv(j)*.6-j*.1,yy=-11+j*1.15;
+   r(x0,yy,w,1.3,j%2?WH:WH3);r(x0,yy,.9,1.3,WH2);if(j==8)r(x0,yy+.85,w,.5,GD)}
+  r(-2.2+sw*.9,-1,2.4,1,'#8a6a3a');r(.2-sw*.9,-1,2.4,1,'#8a6a3a');
+  /* badan */
+  r(-3.6,-21,7.2,10.2,WH);r(-3.6,-21,1,10.2,WH2);r(2.8,-21,.8,10.2,WH3);
+  /* stola warna pilihan */
+  r(-1.3,-21,2.6,20.4,c1);r(-1.3,-21,.5,20.4,sh(c1,.6));r(-1.5,-21,.3,20.4,GD);r(1.2,-21,.3,20.4,GD);
+  r(-1.5,-1.4,3,.6,GD);
+  r(-.35,-19.8,.7,3.6,GL);r(-1.1,-18.8,2.2,.7,GL);r(-.4,-18.9,.8,.8,GEM);
+  r(-3.8,-11.4,7.6,1,GD);r(-.6,-11.5,1.2,1.2,GEM);r(-.3,-11.2,.5,.5,WH3);
+  /* mantel */
+  r(-4.8,-22.6,9.6,2.4,WH);r(-4.8,-22.6,9.6,.5,GD);r(-4.8,-20.6,9.6,.4,GD);r(-4.8,-21.8,.7,.8,GL);r(4.1,-21.8,.7,.8,GL);
+  /* kepala */
+  if(hat==0){
+   L(-4.2,-29.4,-7,-25.6,2.2,WH);L(-7,-25.6,-7.4,-21.6,1.8,WH2);
+   r(-4,-31.4,8,3,WH);r(-4.6,-28.6,9.2,6.6,WH);r(-4.6,-28.6,1.2,6.6,WH2);r(3.4,-28.6,1.2,6.6,WH3);
+   r(-2.8,-28.2,5.8,5,SK);r(-2.8,-28.2,.9,5,SD);
+   r(-3.8,-30.6,7.6,.8,GD);r(-.6,-31.4,1.2,1.6,GL);r(-.3,-31,.6,.8,GEM);
+   if(gn)for(let j=0;j<6;j++)r(-5.4-j*.1+(m?sw*.3:0),-25+j*1.3,1.3,1.4,HR);
+  }else{
+   r(-3,-29.6,6,7,SK);r(-3,-29.6,1,7,SD);
+   r(-3.4,-31.2,6.8,2.2,HR);r(-3.6,-29.8,1.4,5.6,HR);r(2.6,-29.8,.8,1.8,HR);
+   if(gn||hat==3)for(let j=0;j<7;j++)r(-4.6-j*.1+(m?sw*.3:0),-28+j*1.5,1.5,1.6,HR);
+   if(hat==1){r(-3.4,-30.6,6.8,.7,GD);for(let i=0;i<4;i++)r(-3+i*1.9,-31.6-(i%2?0:.6),.8,1.2,GD);r(-.4,-30.8,.8,.7,GEM)}
+   else if(hat==2){r(-3.4,-30,6.8,1,c2);r(-4.4,-29.4,1.2,.8,c2);r(-5.4,-28.8,1.2,.8,sh(c2,.7))}
+   else{r(1.6,-30.8,1.4,1.4,'#ff9ab0');r(1.9,-31.1,.8,.8,GL)}
+  }
+  /* wajah */
+  if(blink)r(.6,-26.2,1.6,.3,'#111');else{r(.5,-26.7,1.7,1,WH3);r(1.2,-26.7,1,1,'#e0a030')}
+  r(.4,-27.4,1.9,.4,'#c9a24a');r(1,-24.7,1.4,.3,'#c0606a');if(gn)r(1,-24.8,1.4,.5,'#d6336c');
+  /* lengan dan tongkat suci */
+  L(4.2,-19.6,hx,hy,2.4,WH);L(4.2,-19.6,hx-.3,hy,.7,WH2);
+  r(hx-1.4,hy-1.1,2.8,.7,GD);r(hx-1,hy-.5,2,1.9,SK);
+  L(hx+.2,.4,hx+.2,-27.4,1.1,'#8a5a2a');L(hx,.4,hx,-27.4,.4,'#b27a42');
+  r(hx-.8,-8,1.6,.5,GD);r(hx-.8,-16.5,1.6,.5,GD);r(hx-.8,-24.5,1.6,.5,GD);
+  r(hx-1.8,-30.4,3.6,3.6,GL);r(hx-.9,-29.5,1.8,1.8,WH3);
+  r(hx-.4,-33.2,.8,2.8,GD);r(hx-3.6,-29,2,.8,GD);r(hx+1.6,-29,2,.8,GD);r(hx-.4,-26.8,.8,1.6,GD);
+  r(hx-3.6,-31.8,2.8,.8,WH);r(hx+.8,-31.8,2.8,.8,WH);
+  if(!ol){
+   /* halo */
+   const h2=(-34.6+by)*u;
+   c.fillStyle='rgba(255,226,120,'+(.14+.08*pl)+')';c.beginPath();c.ellipse(0,h2,7*u,2.6*u,0,0,TAU);c.fill();
+   c.strokeStyle='rgba(255,226,120,.95)';c.lineWidth=Math.max(1,u*.8);c.beginPath();c.ellipse(0,h2,4.8*u,1.5*u,0,0,TAU);c.stroke();
+   c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=Math.max(1,u*.3);c.beginPath();c.ellipse(0,h2,4.8*u,1.5*u,0,0,TAU);c.stroke();
+   /* cahaya tongkat */
+   c.fillStyle='rgba(255,236,150,'+(.16+.1*pl+(ca>0?.2:0)+(at>0?.15:0))+')';c.beginPath();c.arc(hx*u,-29.2*u,(4.4+ca*3+at*1.5)*u,0,TAU);c.fill();
+   for(let i=0;i<3;i++){const a=t*2+i*2.09;r(Math.cos(a)*7-.4,-17+Math.sin(a)*2.4-.4,.9,.9,i%2?WH3:GL)}}
+ };
+ c.save();c.translate(Math.round(x),Math.round(y));
+ if(o.dash)c.globalAlpha=.6;
+ c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(0,0,6*u,1.8*u,0,0,TAU);c.fill();
+ c.scale(d,1);
+ c.fillStyle='rgba(255,226,140,'+(.08+.05*Math.sin(t*3))+')';c.beginPath();c.ellipse(0,-13*u,9*u,14*u,0,0,TAU);c.fill();
+ c.save();
+ c.translate(Math.round((at*1.4-hu*2.2)*u),Math.round(bob*u*.8-ca*2*u));
+ c.scale(.8*(1+sq*.15-ca*.08),.8*(1-sq*.15+ca*.1));
+ c.rotate((m?.04:0)+at*.04-hu*.15);
+ const q=Math.max(1,u*.5);
+ [[-1,0],[1,0],[0,-1],[0,1]].forEach(v=>{c.save();c.translate(v[0]*q,v[1]*q);ol=1;body();c.restore()});
+ ol=0;body();
+ c.restore();
+ const z=Math.max(1,Math.round(u*.7));
+ for(let i=0;i<6;i++){const p2=(t*.65+i/6)%1;
+  c.globalAlpha=(o.dash?.6:1)*(1-p2*.85);c.fillStyle=i%2?'#fff':'#fff3a0';
+  c.fillRect(Math.round(Math.sin(i*2.4+t*.9)*7*u),Math.round((-3-p2*22)*u),z,z)}
+ c.restore();c.globalAlpha=1;
+};
+</script><script>
 /* PEMANAH MALAM */
 CL.archer.n='Pemanah Malam';CL.archer.sn='Malam';
 CL.archer.d='Pemburu bayangan yang menembak dari jauh. Panah bulan menembus 2 musuh dan kadang kritis. Skill: Hujan Bintang, kipas panah bintang disusul bintang jatuh yang memperlambat musuh.';
