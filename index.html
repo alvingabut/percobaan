@@ -1404,10 +1404,64 @@ hero=function(c,x,y,u,o,t){
  c.restore();c.globalAlpha=1;
 };
 </script><script>
-/* TANK KERAJAAN v3: sprite digambar ulang total */
-const _hero0=hero;
+/* TANTANGAN BAJA: skill Tank memancing monster */
+CL.tank.d='Sangat tangguh, menghantam semua musuh di sekitar. Skill: Tantangan Baja, memancing semua monster ke arahnya selama 5 detik dan mengurangi kerusakan yang diterima.';
+(()=>{const p=[...document.querySelectorAll('#help .help p')].find(e=>e.textContent.indexOf('Tank Kerajaan')==0);if(p)p.innerHTML=p.innerHTML.replace('Skill-nya, Benteng Baja, menarik musuh dan mengurangi kerusakan.','Skill-nya, Tantangan Baja, memancing semua monster ke arahnya selama 5 detik dan mengurangi kerusakan yang diterima.')})();
+
+const _skTk=skill;
+skill=function(p){
+ if(!p||p.cls!='tank'||(G&&G.cli))return _skTk(p);
+ if(!G||G.pause||G.over||!p.alive||p.sk>0)return;
+ p.sk=p.skm=12;p.sq=1;G.sh=Math.max(G.sh,.12);
+ p.gd=5;p.tn=5;p.inv=Math.max(p.inv,.5);
+ G.fx.push({k:'tx',x:p.x,y:p.y-80,l:1.2,m:1.2,s:'TANTANGAN BAJA!'});nfx('tx',p.x,p.y-80,0,'TANTANGAN BAJA!');
+ ring(p,260,'#d6212f');ring(p,160,GOLD);
+ for(const e of G.en)if(!e.dead&&dist(e,p)<900){
+  const a=Math.atan2(p.y-e.y,p.x-e.x),f=e.t.boss?.3:1;
+  e.kx+=Math.cos(a)*380*f;e.ky+=Math.sin(a)*380*f}
+ G.zn=G.zn.filter(z=>!(z.k=='tn'&&z.o===p));
+ G.zn.push({k:'tn',x:p.x,y:p.y,t:0,l:5,o:p,d:0});
+};
+
+const _zuTk=zupd;
+zupd=function(dt){
+ for(const z of G.zn)if(z.k=='tn'){
+  const p=z.o;
+  if(!p||!p.alive||!(p.tn>0)){z.l=Math.min(z.l,0);continue}
+  z.x=p.x;z.y=p.y;
+  for(const e of G.en)if(!e.dead){
+   const dx=p.x-e.x,dy=p.y-e.y,q=Math.hypot(dx,dy)||1;
+   if(q<900&&q>140){const f=e.t.boss?.25:1;e.kx+=dx/q*620*f*dt;e.ky+=dy/q*620*f*dt}}}
+ _zuTk(dt)};
+
+const _zdTk=zdraw;
+zdraw=function(z,over){
+ if(z.k!='tn')return _zdTk(z,over);
+ const p=z.o,t=G.t;if(!p||!p.alive)return;
+ const a=cl(z.l,0,1)*cl(z.t/.25,0,1),x=p.x,y=p.y;
+ if(!over){
+  g.save();g.translate(x,y);g.scale(1,.42);
+  for(let i=0;i<3;i++){const f=(t*.9+i/3)%1,r=300*(1-f)+50;
+   g.globalAlpha=a*f*.8;g.strokeStyle=i%2?GOLD:'#d6212f';g.lineWidth=4;g.beginPath();g.arc(0,0,r,0,TAU);g.stroke()}
+  g.globalAlpha=a*.2;g.fillStyle='#d6212f';g.beginPath();g.arc(0,0,60,0,TAU);g.fill();
+  g.restore();g.globalAlpha=1;
+ }else{
+  g.save();g.setLineDash([6,8]);g.globalAlpha=a*.35;g.strokeStyle='#ff5a6a';g.lineWidth=2;
+  for(const e of G.en){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<900){g.beginPath();g.moveTo(e.x,e.y-14);g.lineTo(x,y-30);g.stroke()}}
+  g.restore();
+  g.globalAlpha=a;g.font='bold 18px "Pixelify Sans",monospace';g.textAlign='center';
+  for(const e of G.en){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<900){
+   const ty=e.y-e.t.u*14-16;g.fillStyle='#000';g.fillText('!',e.x+1,ty+1);g.fillStyle='#ff5a6a';g.fillText('!',e.x,ty)}}
+  g.fillStyle=GOLD;g.fillRect(x-1,y-124,2,26);
+  g.fillStyle='#d6212f';g.fillRect(x+1,y-124,18+Math.sin(t*8)*2,10);
+  g.globalAlpha=1;
+ }
+};
+</script><script>
+/* PEMULIHAN DESAIN TANK KERAJAAN v3 (desain tidak diubah) */
+const _hTk3=hero;
 hero=function(c,x,y,u,o,t){
- if(o.cls!='tank')return _hero0(c,x,y,u,o,t);
+ if(o.cls!='tank')return _hTk3(c,x,y,u,o,t);
  const d=o.dir<0?-1:1,m=o.mv?1:0,ph=t*13,sw=m?Math.sin(ph):0,at=o.at||0,sq=o.sq||0,hu=o.hu||0,ca=o.cast||0,
   c1=o.c1,c2=o.c2,hat=o.hat|0,gn=o.gn==1,bob=m?-Math.abs(Math.cos(ph)):Math.sin(t*2.6)*.3,
   by=m?0:Math.sin(t*2.6)*.2,blink=(t%3.4)<.12,wf=Math.sin(t*4)*.3,
