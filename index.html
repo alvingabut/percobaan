@@ -1842,4 +1842,74 @@ drawP=function(p){
  try{_dpMg(p)}finally{p.name=nm}
  g.font='12px "Pixelify Sans",monospace';g.textAlign='center';g.fillStyle='#000';g.fillText(nm,p.x+1,p.y-105+1);g.fillStyle=p.i?'#9fe0a0':'#ffd98a';g.fillText(nm,p.x,p.y-105);
 };
+</script>
+<script>
+/* TOKO + KOIN + DIAMOND (SOAL PAULI) */
+const SH={coin:0,dia:0,hp:0,dmg:0,spd:0,cdr:0,rev:0};
+try{Object.assign(SH,JSON.parse(localStorage.getItem('tahtaAbuShop')||'{}'))}catch(e){}
+Object.keys(SH).forEach(k=>{SH[k]=Math.max(0,Math.floor(+SH[k])||0)});
+const sv=()=>{try{localStorage.setItem('tahtaAbuShop',JSON.stringify(SH))}catch(e){}};
+
+const ITEMS=[
+ {k:'hp',n:'Zirah Kokoh',d:'+8% nyawa maksimum per level',max:10,cur:'coin',cost:l=>80+l*70},
+ {k:'dmg',n:'Asah Senjata',d:'+6% serangan per level',max:10,cur:'coin',cost:l=>100+l*90},
+ {k:'spd',n:'Sepatu Angin',d:'+3% kecepatan gerak per level',max:8,cur:'coin',cost:l=>90+l*80},
+ {k:'cdr',n:'Rune Waktu',d:'-5% cooldown skill per level',max:6,cur:'dia',cost:l=>3+l*2},
+ {k:'rev',n:'Jimat Bangkit',d:'Otomatis bangkit sekali dengan 50% nyawa saat gugur (1 jimat per pemain per permainan)',max:99,cur:'dia',cost:()=>4,stock:1}];
+
+document.head.insertAdjacentHTML('beforeend','<style>.cur{display:flex;gap:18px;justify-content:center;color:var(--gd);font-size:20px}.it{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left}.it small{color:var(--mut)}#shl{display:flex;flex-direction:column;gap:8px;width:min(460px,92vw)}.kp{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:min(340px,86vw)}.kp .btn{min-width:0;padding:12px 0}.pq{font-size:clamp(40px,12vw,64px);color:var(--gd);letter-spacing:4px}</style>');
+document.body.insertAdjacentHTML('beforeend',
+'<section class="scr" id="shop"><h2>Toko</h2><div class="cur" id="shc"></div><div id="shl"></div><button class="btn" id="shk">Kembali</button></section>'+
+'<section class="scr" id="pauli"><h2>Soal Pauli</h2><div class="cur" id="pcu"></div><div id="pbd" style="display:flex;flex-direction:column;gap:12px;align-items:center"></div><button class="btn alt" id="pbk">Kembali</button></section>');
+const ms=document.querySelector('#menu .ms');
+ms.insertAdjacentHTML('afterbegin','<button class="btn alt mini" id="bsh">Toko</button><button class="btn alt mini" id="bpa">Soal Pauli (Diamond)</button>');
+document.querySelector('#help .help').insertAdjacentHTML('beforeend','<p><b>Koin</b> didapat dari mengalahkan musuh. <b>Diamond</b> didapat dengan menjawab soal Pauli di menu. Belanjakan di <b>Toko</b> untuk nyawa, serangan, kecepatan, cooldown skill, dan Jimat Bangkit.</p>');
+
+/* ---- toko ---- */
+const cur=()=>'<span>Koin: '+SH.coin+'</span><span>Diamond: '+SH.dia+'</span>';
+function rsh(){$('#shc').innerHTML=cur();
+ $('#shl').innerHTML=ITEMS.map(it=>{const l=SH[it.k],mx=!it.stock&&l>=it.max,c=it.cost(l),cn=it.cur=='coin'?'koin':'diamond';
+  return '<div class="cc it"><span><b>'+it.n+'</b> '+(it.stock?'(stok '+l+')':'Lv '+l+'/'+it.max)+'<br><small>'+it.d+'</small></span><button class="btn mini" data-b="'+it.k+'"'+(mx?' disabled':'')+'>'+(mx?'MAKS':c+' '+cn)+'</button></div>'}).join('')+
+ '<div class="cc it"><span><b>Tukar Diamond</b><br><small>1 diamond menjadi 150 koin</small></span><button class="btn mini" data-b="ex">Tukar 1</button></div>'}
+$('#shl').onclick=e=>{const b=e.target.closest('[data-b]');if(!b||b.disabled)return;const k=b.dataset.b;
+ if(k=='ex'){if(SH.dia<1)return toast('Diamond tidak cukup.');SH.dia--;SH.coin+=150}
+ else{const it=ITEMS.find(x=>x.k==k),c=it.cost(SH[k]);if(SH[it.cur]<c)return toast((it.cur=='coin'?'Koin':'Diamond')+' tidak cukup.');SH[it.cur]-=c;SH[k]++}
+ sv();rsh()};
+$('#bsh').onclick=()=>{rsh();show('shop')};$('#shk').onclick=()=>show('menu');
+
+/* ---- soal Pauli: jumlahkan dua angka, tulis hanya angka satuan; angka kedua jadi angka pertama soal berikutnya ---- */
+const rn=()=>R()*10|0,TOT=10;let P={st:0,n:0,ok:0,a:0,b:0,fb:''};
+function prn(){$('#pcu').innerHTML=cur();const o=$('#pbd');
+ if(P.st==0)o.innerHTML='<p class="sub">Jumlahkan dua angka, lalu jawab hanya angka satuan hasilnya. Contoh: 7 + 8 = 15, jawab 5. Angka kedua menjadi angka pertama di soal berikutnya. Setiap jawaban benar memberi 1 diamond ('+TOT+' soal).</p><button class="btn" id="pgo">Mulai</button>';
+ else if(P.st==2)o.innerHTML='<p class="sub">'+P.fb+'</p><p class="sub">Benar '+P.ok+' dari '+TOT+'. Kamu mendapat '+P.ok+' diamond.</p><button class="btn" id="pgo">Main Lagi</button>';
+ else o.innerHTML='<p class="sub">Soal '+(P.n+1)+' dari '+TOT+'. '+P.fb+'</p><div class="pq">'+P.a+' + '+P.b+' = ?</div><div class="kp">'+[1,2,3,4,5,6,7,8,9,0].map(d=>'<button class="btn alt" data-p="'+d+'">'+d+'</button>').join('')+'</div>'}
+function pans(v){if(P.st!=1)return;const c=(P.a+P.b)%10;
+ if(v==c){P.ok++;SH.dia++;P.fb='Benar! +1 diamond.'}else P.fb='Salah, jawabannya '+c+'.';
+ P.n++;sv();if(P.n>=TOT)P.st=2;else{P.a=P.b;P.b=rn()}prn()}
+$('#pbd').onclick=e=>{if(e.target.id=='pgo'){P={st:1,n:0,ok:0,a:rn(),b:rn(),fb:''};prn()}else{const d=e.target.closest('[data-p]');if(d)pans(+d.dataset.p)}};
+$('#bpa').onclick=()=>{P={st:0,n:0,ok:0,a:0,b:0,fb:''};prn();show('pauli')};$('#pbk').onclick=()=>show('menu');
+addEventListener('keydown',e=>{if(!$('#pauli').classList.contains('on')||P.st!=1)return;const m=/^(?:Digit|Numpad)(\d)$/.exec(e.code);if(m)pans(+m[1])});
+
+/* ---- koin dari musuh ---- */
+const _hitSh=hit;
+hit=function(e,d,p,kx,ky){const was=e&&e.dead;_hitSh(e,d,p,kx,ky);
+ if(e&&!was&&e.dead&&G&&!G.cli){const c=e.t.boss?40:Math.max(1,Math.round(e.sc/8));SH.coin+=c;G.cg=(G.cg||0)+c;sv()}};
+const _showSh=show;
+show=function(id){_showSh(id);if(id=='over'&&G&&G.cg&&!G.cgd){G.cgd=1;$('#ovt').textContent+=' Koin didapat: '+G.cg+'.'}};
+
+/* ---- efek upgrade ---- */
+const _mkSh=mkP;
+mkP=function(i,c){const p=_mkSh(i,c);if(p.rm)return p;
+ p.max=Math.round(p.max*(1+.08*SH.hp));p.hp=p.max;p.sp*=1+.03*SH.spd;p.rdm=(p.rdm||1)*(1+.06*SH.dmg);p.cdm=Math.max(.4,1-.05*SH.cdr);p.rv=0;return p};
+const _skSh=skill;
+skill=function(p){const ok=p&&p.alive&&!(p.sk>0)&&G&&!G.cli&&!G.pause&&!G.over;_skSh(p);
+ if(ok&&p.sk>0&&p.cdm&&p.cdm<1){p.sk*=p.cdm;p.skm*=p.cdm}};
+const _dmSh=dmgP;
+dmgP=function(p,d){const was=p.alive;_dmSh(p,d);
+ if(was&&!p.alive&&!p.rv&&!p.rm&&SH.rev>0){SH.rev--;sv();p.rv=1;p.alive=1;p.hp=Math.round(p.max*.5);p.inv=2;toast(p.name+' bangkit berkat Jimat Bangkit!')}};
+
+/* ---- HUD ---- */
+const _drSh=draw;
+draw=function(){_drSh();if(!G)return;g.save();g.textAlign='right';g.font='bold 13px "Pixelify Sans",monospace';const t='Koin '+SH.coin+'   Diamond '+SH.dia;
+ g.fillStyle='#000';g.fillText(t,W-9,71);g.fillStyle='#ffd98a';g.fillText(t,W-10,70);g.restore()};
 </script></html>
